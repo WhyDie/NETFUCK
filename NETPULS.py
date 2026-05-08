@@ -18,18 +18,18 @@ import errno
 import webbrowser
 try:
     from scapy.all import ARP, Ether, srp, srp1, IP, TCP, ICMP
-except ImportError:
+except Exception:
     pass # Scapy не є обов'язковою, але рекомендована для агресивного режиму
 try:
     import dns.resolver
     import dns.zone
     import dns.query
     import dns.reversename
-except ImportError:
+except Exception:
     pass # dnspython потрібен для перевірки AXFR
 try:
     import netifaces
-except ImportError:
+except Exception:
     pass # netifaces не є обов'язковим, але покращує автовизначення мережі
 from concurrent.futures import ThreadPoolExecutor
 import ssl
@@ -117,6 +117,10 @@ class NetworkScannerApp:
         '00:0B:82': 'Grandstream', 'E4:6F:13': 'Grandstream', '00:1A:E8': 'Grandstream', 'C0:74:AD': 'Grandstream',
         '00:15:65': 'Yealink', '80:5E:C0': 'Yealink', 'E4:AA:EA': 'Yealink', '00:04:13': 'Snom',
         '00:04:F2': 'Polycom', '64:16:7F': 'Polycom', '00:A8:59': 'Fanvil', '00:04:0D': 'Avaya',
+        '00:1E:5E': 'Dinstar', 'B0:8E:1A': 'Dinstar', 'E0:14:5A': 'Dinstar', '10:E1:92': 'Yeastar', 'A8:FD:CE': 'Yeastar',
+        '00:90:8F': 'AudioCodes', '00:1F:02': 'AudioCodes', '00:10:99': 'Sangoma', '00:0F:D3': 'Mitel', '00:10:4C': 'Mitel',
+        '00:A0:BA': 'Patton', '00:0E:08': 'Sipura', '00:80:9F': 'Alcatel-Lucent', '00:D0:95': 'Alcatel-Lucent', '00:E0:B1': 'Alcatel-Lucent',
+        '00:1A:1D': 'OpenVox', '7C:2F:80': 'Gigaset', '00:08:5D': 'Aastra', '00:1D:BD': 'Digium', 'A8:F9:4B': 'Eltex', 'E0:D9:E3': 'Eltex', '00:1E:5A': 'Eltex',
         '00:25:9C': 'Cisco', '00:03:6B': 'Cisco', '00:1B:D4': 'Cisco', '00:11:21': 'Cisco',
         '00:15:6D': 'Ubiquiti', '00:27:22': 'Ubiquiti', '04:18:D6': 'Ubiquiti', '24:A4:3C': 'Ubiquiti', '44:D9:E7': 'Ubiquiti', '68:D7:9A': 'Ubiquiti', '74:83:C2': 'Ubiquiti', '78:8A:20': 'Ubiquiti', '80:2A:A8': 'Ubiquiti', 'B4:FB:E4': 'Ubiquiti', 'E0:63:DA': 'Ubiquiti', 'F0:9F:C2': 'Ubiquiti', 'FC:EC:DA': 'Ubiquiti',
         '00:00:1D': 'Juniper', '00:11:32': 'Synology', '00:08:9B': 'QNAP', '24:5E:BE': 'QNAP', '00:50:56': 'VMware', '08:00:27': 'VirtualBox',
@@ -152,7 +156,7 @@ class NetworkScannerApp:
         self.exclude_virtual_ifaces = True
 
         self.root = root
-        self.root.title("NETFUCK - Мережевий Сканер та Аналізатор Вразливостей")
+        self.root.title("NetPulse - Мережевий Сканер та Аналізатор Вразливостей")
         self.root.geometry("1500x750")
         self.is_scanning = False
         self.stop_event = threading.Event()
@@ -359,18 +363,18 @@ class NetworkScannerApp:
         self.auto_subnet_cb = ctk.CTkCheckBox(top_frame, text="Авто-пошук підмереж", variable=self.auto_subnet_var, font=self.font_normal)
         self.auto_subnet_cb.pack(side=tk.LEFT, padx=(10, 5))
 
-        self.scan_btn = ctk.CTkButton(top_frame, text="🚀 Почати Сканування", font=self.font_bold, command=self.start_scan_thread, fg_color="#007ACC", hover_color="#005F9E")
+        self.scan_btn = ctk.CTkButton(top_frame, text="🚀", font=self.font_bold, command=self.start_scan_thread, fg_color="#007ACC", hover_color="#005F9E")
         self.scan_btn.pack(side=tk.LEFT, padx=15)
         
-        self.stop_btn = ctk.CTkButton(top_frame, text="🛑 Зупинити", font=self.font_bold, fg_color="#E53935", hover_color="#C62828", command=self.stop_scan, state="disabled")
+        self.stop_btn = ctk.CTkButton(top_frame, text="🛑", font=self.font_bold, fg_color="#E53935", hover_color="#C62828", command=self.stop_scan, state="disabled")
         self.stop_btn.pack(side=tk.LEFT, padx=5)
 
         # Група кнопок для експорту та сесій
         actions_frame = ctk.CTkFrame(top_frame, fg_color="transparent")
         actions_frame.pack(side=tk.RIGHT, padx=(5, 0))
-        self.export_html_btn = ctk.CTkButton(actions_frame, text="📄 Експорт (HTML)", font=self.font_normal, command=self.export_to_html, state="disabled", fg_color="#555555", hover_color="#444444")
+        self.export_html_btn = ctk.CTkButton(actions_frame, text="HTML", font=self.font_normal, command=self.export_to_html, state="disabled", fg_color="#555555", hover_color="#444444")
         self.export_html_btn.pack(side=tk.LEFT, padx=5)
-        self.export_csv_btn = ctk.CTkButton(actions_frame, text="💾 Експорт (CSV)", font=self.font_normal, command=self.export_to_csv, state="disabled", fg_color="#555555", hover_color="#444444")
+        self.export_csv_btn = ctk.CTkButton(actions_frame, text="CSV", font=self.font_normal, command=self.export_to_csv, state="disabled", fg_color="#555555", hover_color="#444444")
         self.export_csv_btn.pack(side=tk.LEFT, padx=5)
 
     def on_mode_change(self, choice):
@@ -783,9 +787,9 @@ class NetworkScannerApp:
         self.stop_btn.configure(state="disabled")
         self.update_action_buttons_state()
         if self.stop_event.is_set():
-            self.log("СКАНУВАННЯ ПЕРЕРВАНО ОПЕРАТОРОМ.", "error", from_thread=True)
+            self.log("СКАНИРОВАННЯ ПЕРЕРВАНО ОПЕРАТОРОМ.", "error", from_thread=True)
         else:
-            self.log("СКАНУВАННЯ УСПІШНО ЗАВЕРШЕНО!", "success", from_thread=True)
+            self.log("СКАНИРОВАННЯ УСПІШНО ЗАВЕРШЕНО!", "success", from_thread=True)
 
     def update_action_buttons_state(self, is_scanning=False):
         """Оновлює стан кнопок експорту."""
@@ -920,6 +924,8 @@ class NetworkScannerApp:
                             wsd_hostname = self.probe_wsd(ip)
                             mndp_info, mndp_identity = self.probe_mikrotik_mndp(ip)
                             mndp_info, mndp_identity = self.probe_mikrotik_mndp(ip)
+                            # Також виконуємо SIP-пробу навіть у локальному режимі — svmap робить так в стандартному скані
+                            sip_info = self.probe_sip(ip)
                         else:
                             # Віддалений режим: мінімальні UDP-проби, але залишаємо SIP та SNMP (якщо агресивно)
                             sip_info = self.probe_sip(ip)
@@ -1021,9 +1027,23 @@ class NetworkScannerApp:
 
                         # Глибокий пошук моделі Grandstream, якщо web-проба не спрацювала
                         if not grandstream_model:
-                            if sip_info and 'grandstream' in sip_info.lower():
-                                gs_parts = [s.split(': ', 1)[1] for s in sip_info.split(' | ') if ': ' in s and 'grandstream' in s.lower()]
-                                if gs_parts: grandstream_model = gs_parts[0]
+                            # Спроба витягнути модель з SIP-банера навіть якщо рядок не містить 'grandstream'
+                            if sip_info:
+                                gs_parts = []
+                                # Перебираємо кожен фрагмент SIP-відповіді, шукаємо шаблони Grandstream (GXP/GXV/UCМ/DP...)
+                                for s in sip_info.split(' | '):
+                                    part = s.split(': ', 1)[1] if ': ' in s else s
+                                    m = re.search(r"(?i)\b(GXP-?\d{2,4}|GXV-?\d{2,4}|HT-?\d{2,4}|UCM-?\d+|DP-?\d+|GWN-?\d+)\b", part)
+                                    if m:
+                                        # Спроба знайти версію поруч
+                                        v = re.search(r'([0-9]+(?:\.[0-9A-Za-z-]+)+)', part)
+                                        if v:
+                                            gs_parts.append(f"{m.group(1)} (FW: {v.group(1)})")
+                                        else:
+                                            gs_parts.append(m.group(1))
+                                if gs_parts:
+                                    grandstream_model = gs_parts[0]
+                            # Якщо ще не знайдено, перевіряємо HTTP-банери як резерв
                             # Резервний пошук в HTTP банерах (якщо закритий SIP)
                             if not grandstream_model and banners:
                                 for p, b in banners.items():
@@ -1663,12 +1683,12 @@ class NetworkScannerApp:
     def probe_sip(self, ip):
         """Відправляє SIP OPTIONS запит (поведінка svmap) для ідентифікації IP-телефонів та АТС"""
         found_sip_services = []
+        seen = set()
 
         # Динамічно отримуємо IP-адресу нашого сканера для правильних заголовків Via та Contact
         local_ip = "192.168.1.100"
         try:
             with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as temp_s:
-                # Якщо відомий IP інтерфейсу — використаємо його для коректних Via/Contact
                 if getattr(self, 'scan_iface_ip', None):
                     try:
                         temp_s.bind((self.scan_iface_ip, 0))
@@ -1680,40 +1700,120 @@ class NetworkScannerApp:
                     except Exception:
                         pass
                 local_ip = temp_s.getsockname()[0]
-        except: pass
+        except Exception:
+            pass
 
-        for port in [5060, 5061, 5062, 5080]:
-            try:
-                with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
-                    s.settimeout(1.0)
-                    # Прив'язуємо сокет, щоб отримати реальний порт для зворотного зв'язку (як це робить svmap)
-                    try:
-                        if getattr(self, 'scan_iface_ip', None):
-                            s.bind((self.scan_iface_ip, 0))
-                        else:
-                            s.bind(('', 0))
-                    except Exception:
+        ports = [5060, 5061, 5062, 5080]
+        # Try both UDP and TCP OPTIONS to maximize chance of getting a rich banner
+        for port in ports:
+            for transport in ("UDP", "TCP"):
+                try:
+                    proto = transport
+                    # prepare randomized identifiers to look like a real client (svmap-like)
+                    branch = f"z9hG4bK{random.randint(1000000, 9999999)}"
+                    call_id = f"{random.randint(10000000,99999999)}@{local_ip}"
+                    tag = random.randint(1000, 9999)
+                    cseq = random.randint(1, 9999)
+
+                    if transport == "UDP":
+                        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+                        s.settimeout(1.0)
                         try:
-                            s.bind(('', 0))
-                        except:
+                            if getattr(self, 'scan_iface_ip', None):
+                                s.bind((self.scan_iface_ip, 0))
+                            else:
+                                s.bind(("", 0))
+                        except Exception:
                             pass
-                    actual_port = s.getsockname()[1]
-
-                    # Ідеальний SIP OPTIONS запит. Додано ;rport та фактичний порт для гарантованої відповіді від АТС/Телефонів
-                    msg = f"OPTIONS sip:100@{ip}:{port} SIP/2.0\r\nVia: SIP/2.0/UDP {local_ip}:{actual_port};branch=z9hG4bK-svmap;rport\r\nMax-Forwards: 70\r\nTo: <sip:100@{ip}:{port}>\r\nFrom: <sip:scanner@{local_ip}:{actual_port}>;tag=1928301774\r\nCall-ID: a84b4c76e66710\r\nCSeq: 1 OPTIONS\r\nContact: <sip:scanner@{local_ip}:{actual_port}>\r\nUser-Agent: svmap\r\nAccept: application/sdp\r\nContent-Length: 0\r\n\r\n"
-                    s.sendto(msg.encode(), (ip, port))
-                    data, _ = s.recvfrom(2048)
-                    if b"SIP/2.0" in data:
+                        actual_port = s.getsockname()[1]
+                        msg = (
+                            f"OPTIONS sip:100@{ip}:{port} SIP/2.0\r\n"
+                            f"Via: SIP/2.0/UDP {local_ip}:{actual_port};branch={branch};rport\r\n"
+                            "Max-Forwards: 70\r\n"
+                            f"To: <sip:100@{ip}:{port}>\r\n"
+                            f"From: <sip:scanner@{local_ip}:{actual_port}>;tag={tag}\r\n"
+                            f"Call-ID: {call_id}\r\n"
+                            f"CSeq: {cseq} OPTIONS\r\n"
+                            f"Contact: <sip:scanner@{local_ip}:{actual_port}>\r\n"
+                            "User-Agent: svmap/1.0\r\n"
+                            "Allow: INVITE, ACK, CANCEL, OPTIONS, BYE, REFER, SUBSCRIBE, NOTIFY, INFO, MESSAGE\r\n"
+                            "Supported: replaces, path, outbound\r\n"
+                            "Accept: application/sdp\r\n"
+                            "Content-Length: 0\r\n\r\n"
+                        )
+                        s.sendto(msg.encode(), (ip, port))
+                        data, _ = s.recvfrom(4096)
                         text_data = data.decode('utf-8', errors='ignore')
-                        server_val, ua_val = "", ""
+                        s.close()
+                    else:
+                        # TCP (many SIP stacks also respond on TCP)
+                        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                        s.settimeout(1.0)
+                        try:
+                            if getattr(self, 'scan_iface_ip', None):
+                                s.bind((self.scan_iface_ip, 0))
+                        except Exception:
+                            pass
+                        s.connect((ip, port))
+                        actual_port = s.getsockname()[1]
+                        msg = (
+                            f"OPTIONS sip:100@{ip}:{port} SIP/2.0\r\n"
+                            f"Via: SIP/2.0/TCP {local_ip}:{actual_port};branch={branch}\r\n"
+                            "Max-Forwards: 70\r\n"
+                            f"To: <sip:100@{ip}:{port}>\r\n"
+                            f"From: <sip:scanner@{local_ip}:{actual_port}>;tag={tag}\r\n"
+                            f"Call-ID: {call_id}\r\n"
+                            f"CSeq: {cseq} OPTIONS\r\n"
+                            f"Contact: <sip:scanner@{local_ip}:{actual_port}>\r\n"
+                            "User-Agent: svmap/1.0\r\n"
+                            "Allow: INVITE, ACK, CANCEL, OPTIONS, BYE, REFER, SUBSCRIBE, NOTIFY, INFO, MESSAGE\r\n"
+                            "Supported: replaces, path, outbound\r\n"
+                            "Accept: application/sdp\r\n"
+                            "Content-Length: 0\r\n\r\n"
+                        )
+                        s.sendall(msg.encode())
+                        data = s.recv(4096)
+                        text_data = data.decode('utf-8', errors='ignore')
+                        s.close()
+
+                    if text_data and "SIP/2.0" in text_data:
+                        # parse headers and try to extract model/version
+                        headers = {}
                         for line in text_data.split('\r\n'):
-                            if line.lower().startswith('server:'): server_val = line[7:].strip()
-                            elif line.lower().startswith('user-agent:'): ua_val = line[11:].strip()
-                        best_info = ua_val if len(ua_val) > len(server_val) else server_val
-                        if best_info:
-                            found_sip_services.append(f"Port {port}: {best_info}")
-            except:
-                pass
+                            if ':' in line:
+                                k, v = line.split(':', 1)
+                                headers[k.strip().lower()] = v.strip()
+
+                        server_val = headers.get('server', '')
+                        ua_val = headers.get('user-agent', '')
+                        banner = ' '.join(filter(None, [ua_val, server_val, text_data.split('\r\n')[0]]))
+
+                        # Try to match model and version in common vendor formats
+                        mv = re.search(r"(?i)\b(GXP-?\d{2,4}|GXV-?\d{2,4}|HT-?\d{2,4}|UCM-?\d+|DP-?\d+|GWN-?\d+|Yealink|Polycom|Fanvil|Snom|Grandstream)[/\s-]*([0-9]+(?:\.[0-9A-Za-z-]+)+)", banner)
+                        if mv:
+                            model = mv.group(1).strip()
+                            ver = mv.group(2).strip()
+                            entry = f"Port {port} ({proto}): {model} (FW: {ver})"
+                        else:
+                            m_model = re.search(r"(?i)\b(GXP-?\d{2,4}|GXV-?\d{2,4}|HT-?\d{2,4}|UCM-?\d+|DP-?\d+|GWN-?\d+|Yealink|Polycom|Fanvil|Snom|Grandstream)\b", banner)
+                            m_ver = re.search(r"([0-9]+(?:\.[0-9A-Za-z-]+)+)", banner)
+                            if m_model and m_ver:
+                                entry = f"Port {port} ({proto}): {m_model.group(1)} (FW: {m_ver.group(1)})"
+                            elif m_model:
+                                entry = f"Port {port} ({proto}): {m_model.group(1)}"
+                            elif ua_val or server_val:
+                                best = ua_val if len(ua_val) > len(server_val) else server_val
+                                entry = f"Port {port} ({proto}): {best}"
+                            else:
+                                entry = f"Port {port} ({proto}): {text_data.split('\r\n')[0][:120]}"
+
+                        if entry and entry not in seen:
+                            seen.add(entry)
+                            found_sip_services.append(entry)
+                except Exception:
+                    # ignore per-host transport errors and continue
+                    pass
+
         return " | ".join(found_sip_services) if found_sip_services else ""
 
     def probe_winbox_banner(self, ip):
@@ -1866,29 +1966,137 @@ class NetworkScannerApp:
 
     def probe_grandstream_web(self, ip):
         """Витягує точну модель та версію прошивки пристроїв Grandstream з Web-інтерфейсу"""
+        paths = ["/", "/index.html", "/cgi-bin/ConfigForm", "/cgi-bin/Config", "/cgi-bin/monitor.cgi", "/cgi-bin/firmware", "/cgi-bin/systemcfg.cgi", "/cgi-bin/gs_provisioning", "/status", "/cgi-bin/status", "/cgi-bin/sysInfo", "/cgi-bin/getcfg", "/cgi-bin/status.json"]
+        model_regex = re.compile(r'(?i)\b((?:GXP|GXV|HT|UCM|DP|GWN)[\s\-_]?\d{2,5}|Grandstream)\b')
+        fw_regex = re.compile(r'(?i)(?:Firmware|Firmware Version|FW|Software Version|sw_version|firmware_version|fwVersion|software_version)[\s:\"=]*([0-9]+(?:\.[0-9A-Za-z\-]+)*)')
+        js_model_regex = re.compile(r"""(?i)(?:var|deviceModel|ModelName|modelName|productModel|PRODUCT_MODEL|product_name|gProductModel|g_model)[^=\n=]*=[\s'\"]*([^'\";\n\)]+)""")
+        json_model_regex = re.compile(r'(?i)["\']?(?:model|productModel|product_name|product|device_model)["\']?\s*[:=]\s*["\']([^"\']+)["\']')
+        json_fw_regex = re.compile(r'(?i)["\']?(?:firmware_version|sw_version|version|fwVersion|software_version)["\']?\s*[:=]\s*["\']([^"\']+)["\']')
+
         for port in [80, 443, 8080, 8089]:
             protocol = "https" if port in [443, 8089] else "http"
-            url = f"{protocol}://{ip}:{port}" if port not in [80, 443] else f"{protocol}://{ip}"
-            try:
-                ctx = ssl.create_default_context()
-                ctx.check_hostname = False
-                ctx.verify_mode = ssl.CERT_NONE
-                req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
-                with urllib.request.urlopen(req, context=ctx, timeout=1.5) as response:
-                    html = response.read().decode('utf-8', errors='ignore')
-                    server_header = response.headers.get('Server', '')
-                    
-                    model_match = re.search(r'(?i)(GXP\d+|HT\d+|UCM\d+|GXV\d+|DP\d+|GWN\d+|HT-\d+)', html)
-                    fw_match = re.search(r'(?i)(?:Firmware|Software|Prog)\s*(?:Version)?[\s:]+([\d\.]+)', html)
-                    
-                    if model_match and fw_match:
-                        return f"Grandstream {model_match.group(1).upper()} (FW: {fw_match.group(1)})"
-                    elif fw_match and ("Grandstream" in html or "Grandstream" in server_header):
-                        return f"Grandstream (FW: {fw_match.group(1)})"
-                    elif 'Grandstream' in server_header:
+            for path in paths:
+                url = f"{protocol}://{ip}:{port}{path}" if port not in [80, 443] else f"{protocol}://{ip}{path}"
+                try:
+                    ctx = ssl.create_default_context()
+                    ctx.check_hostname = False
+                    ctx.verify_mode = ssl.CERT_NONE
+                    req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+                    try:
+                        with urllib.request.urlopen(req, context=ctx, timeout=1.5) as response:
+                            html = response.read().decode('utf-8', errors='ignore')
+                            server_header = response.headers.get('Server', '')
+                    except urllib.error.HTTPError as e:
+                        # Деякі пристрої повертають 401/403 з корисними тілами та заголовками
+                        try:
+                            html = e.read().decode('utf-8', errors='ignore')
+                        except Exception:
+                            html = ''
+                        server_header = e.headers.get('Server', '')
+                    except Exception:
+                        continue
+
+                    combined = (server_header or '') + '\n' + (html or '')
+
+                    # Швидка перевірка заголовка Server
+                    if server_header and model_regex.search(server_header):
                         return server_header.strip()
-            except:
-                pass
+
+                    # Спробуємо завантажити зовнішні скрипти, які можуть містити JS-змінні або JSON з моделлю/версією
+                    try:
+                        script_srcs = re.findall(r'<script[^>]+src=["\']([^"\']+)["\']', html, flags=re.I)
+                        scripts_checked = 0
+                        for src in script_srcs:
+                            if scripts_checked >= 6:
+                                break
+                            if src.startswith('//'):
+                                scr_url = f"{protocol}:{src}"
+                            elif src.startswith('http://') or src.startswith('https://'):
+                                scr_url = src
+                            elif src.startswith('/'):
+                                if port in [80, 443]:
+                                    scr_url = f"{protocol}://{ip}{src}"
+                                else:
+                                    scr_url = f"{protocol}://{ip}:{port}{src}"
+                            else:
+                                if port in [80, 443]:
+                                    scr_url = f"{protocol}://{ip}/{src}"
+                                else:
+                                    scr_url = f"{protocol}://{ip}:{port}/{src}"
+                            try:
+                                req_s = urllib.request.Request(scr_url, headers={'User-Agent': 'Mozilla/5.0'})
+                                with urllib.request.urlopen(req_s, context=ctx, timeout=1.5) as sres:
+                                    stext = sres.read().decode('utf-8', errors='ignore')
+                                    if stext:
+                                        combined += '\n' + stext[:20000]
+                            except Exception:
+                                pass
+                            scripts_checked += 1
+                    except Exception:
+                        pass
+
+                    # Шукаємо в комбінованому контенті (завантажена сторінка + скрипти): модель, meta-теги, JS-оголошення, JSON
+                    m_model = model_regex.search(combined)
+                    m_fw = fw_regex.search(combined)
+                    m_js = js_model_regex.search(combined)
+                    meta_model = re.search(r'(?i)<meta[^>]+name=["\']?model["\']?[^>]+content=["\']?([^"\'>]+)', html)
+                    j_model = json_model_regex.search(combined)
+                    j_fw = json_fw_regex.search(combined)
+
+                    model_val = None
+                    fw_val = None
+                    if m_model:
+                        model_val = m_model.group(1)
+                    elif m_js:
+                        model_val = m_js.group(1).strip()
+                    elif j_model:
+                        model_val = j_model.group(1).strip()
+                    elif meta_model:
+                        model_val = meta_model.group(1).strip()
+
+                    if m_fw:
+                        fw_val = m_fw.group(1)
+                    elif j_fw:
+                        fw_val = j_fw.group(1)
+
+                    # Якщо нічого не знайдено на поточному шляху, спробуємо витягти з title або інших маркерів
+                    if not model_val:
+                        # Try title and any loose model patterns anywhere in combined content
+                        title_m = re.search(r'(?i)<title[^>]*>(.*?)</title>', html, re.DOTALL)
+                        if title_m:
+                            mm = model_regex.search(title_m.group(1))
+                            if mm: model_val = mm.group(1)
+                    if not model_val:
+                        loose = re.search(r'(?i)\b(GXP\d{3,4}|GXV\d{3,4}|HT\d{3,4}|UCM\d+|DP\d+|GWN\d+)\b', combined)
+                        if loose: model_val = loose.group(1)
+
+                    if model_val or fw_val:
+                        # Формуємо чистий, читабельний рядок з моделлю та версією
+                        model_part = None
+                        fw_part = None
+                        if model_val:
+                            mv = model_val.strip()
+                            # Нормалізуємо значення моделі
+                            mv = re.sub(r'(?i)model[:=\s]*', '', mv).strip()
+                            if not re.search(r'(?i)grandstream', mv):
+                                model_part = f"Grandstream {mv}"
+                            else:
+                                model_part = mv
+                        if fw_val:
+                            fw_part = fw_val.strip()
+
+                        if model_part and fw_part:
+                            return f"{model_part} (FW: {fw_part})"
+                        if model_part:
+                            return model_part
+                        if fw_part and ('grandstream' in (server_header or '').lower() or 'grandstream' in (html or '').lower()):
+                            return f"Grandstream (FW: {fw_part})"
+                        # Якщо нічого чітко не визначено — повертаємо корисний фрагмент з Server/HTML
+                        if server_header:
+                            return server_header.strip()
+                        return (html or combined or '').strip()[:160]
+                except Exception:
+                    pass
         return ""
 
     def probe_mikrotik_mndp(self, ip):
@@ -2234,13 +2442,140 @@ class NetworkScannerApp:
 
 
 if __name__ == "__main__":
+    def diagnostic_probe_grandstream(ip):
+        """Headless diagnostic probe that prints model/version candidates and useful headers."""
+        import ssl as _ssl
+        import urllib.request as _ur
+        import urllib.error as _ue
+        import re as _re
+        paths = ["/", "/index.html", "/status", "/status.htm", "/status.xml", "/cgi-bin/ConfigForm", "/cgi-bin/Config", "/cgi-bin/monitor.cgi", "/cgi-bin/firmware", "/cgi-bin/systemcfg.cgi", "/cgi-bin/gs_provisioning", "/cgi-bin/status", "/cgi-bin/status.json", "/cgi-bin/sysInfo", "/cgi-bin/getcfg", "/cgi-bin/status.htm"]
+        ports = [80, 443, 8080, 8089]
+        model_regex = _re.compile(r"""(?i)\b((?:GXP|GXV|HT|UCM|DP|GWN)[\s\-_]?\d{2,5}|Grandstream)\b""")
+        fw_regex = _re.compile(r"""(?i)(?:Firmware|Firmware Version|FW|Software Version|sw_version|firmware_version|fwVersion|software_version)[\s:\"=]*([0-9]+(?:\.[0-9A-Za-z\-]+)*)""")
+        js_model_regex = _re.compile(r"""(?i)(?:var|deviceModel|ModelName|modelName|productModel|PRODUCT_MODEL|product_name|gProductModel|g_model)[^=\n=]*=[\s'\"]*([^'\";\n)]+)""")
+        json_model_regex = _re.compile(r"""(?i)["']?(?:model|productModel|product_name|product|device_model)["']?\s*[:=]\s*["']([^"']+)["']""")
+        json_fw_regex = _re.compile(r"""(?i)["']?(?:firmware_version|sw_version|version|fwVersion|software_version)["']?\s*[:=]\s*["']([^"']+)["']""")
+        ctx = _ssl.create_default_context()
+        ctx.check_hostname = False
+        ctx.verify_mode = _ssl.CERT_NONE
+
+        print(f"Diagnostic Grandstream probe: {ip}")
+        for port in ports:
+            protocol = 'https' if port in (443, 8089) else 'http'
+            for path in paths:
+                if port in (80, 443):
+                    url = f"{protocol}://{ip}{path}"
+                else:
+                    url = f"{protocol}://{ip}:{port}{path}"
+                print('\n' + '='*60)
+                print('URL:', url)
+                try:
+                    req = _ur.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+                    try:
+                        with _ur.urlopen(req, context=ctx, timeout=3) as resp:
+                            status = getattr(resp, 'status', '200')
+                            server = resp.headers.get('Server', '')
+                            body = resp.read().decode('utf-8', errors='ignore')
+                    except _ue.HTTPError as he:
+                        status = he.code
+                        server = he.headers.get('Server', '')
+                        try:
+                            body = he.read().decode('utf-8', errors='ignore')
+                        except Exception:
+                            body = ''
+                    except Exception as e:
+                        print('Request failed:', e)
+                        continue
+
+                    print('Status:', status)
+                    if server:
+                        print('Server header:', server)
+                    title_m = _re.search(r'(?i)<title[^>]*>(.*?)</title>', body, _re.DOTALL)
+                    if title_m:
+                        print('Title:', title_m.group(1).strip())
+
+                    combined = (server or '') + '\n' + (body or '')
+
+                    m_model = model_regex.search(combined)
+                    m_fw = fw_regex.search(combined)
+                    m_js = js_model_regex.search(combined)
+                    j_model = json_model_regex.search(combined)
+                    j_fw = json_fw_regex.search(combined)
+
+                    if m_model:
+                        print('Found model (combined):', m_model.group(1))
+                    if m_js:
+                        print('Found JS model var:', m_js.group(1))
+                    if j_model:
+                        print('Found JSON model key:', j_model.group(1))
+                    if m_fw:
+                        print('Found firmware (combined):', m_fw.group(1))
+                    if j_fw:
+                        print('Found firmware (JSON):', j_fw.group(1))
+
+                    # Fetch a few external scripts for additional clues
+                    script_srcs = _re.findall(r"""<script[^>]+src=["']([^"']+)["']""", body, flags=_re.I)
+                    if script_srcs:
+                        print('Script srcs:', script_srcs[:8])
+                        checked = 0
+                        for src in script_srcs:
+                            if checked >= 6:
+                                break
+                            if src.startswith('//'):
+                                scr = f"{protocol}:{src}"
+                            elif src.startswith('http://') or src.startswith('https://'):
+                                scr = src
+                            elif src.startswith('/'):
+                                if port in (80, 443):
+                                    scr = f"{protocol}://{ip}{src}"
+                                else:
+                                    scr = f"{protocol}://{ip}:{port}{src}"
+                            else:
+                                if port in (80, 443):
+                                    scr = f"{protocol}://{ip}/{src}"
+                                else:
+                                    scr = f"{protocol}://{ip}:{port}/{src}"
+                            print(' Fetching script:', scr)
+                            try:
+                                with _ur.urlopen(_ur.Request(scr, headers={'User-Agent': 'Mozilla/5.0'}), context=ctx, timeout=2) as sres:
+                                    st = sres.read().decode('utf-8', errors='ignore')
+                                    cm = (combined + '\n' + st)[:30000]
+                                    m_model2 = model_regex.search(cm)
+                                    m_fw2 = fw_regex.search(cm)
+                                    m_js2 = js_model_regex.search(cm)
+                                    j_model2 = json_model_regex.search(cm)
+                                    j_fw2 = json_fw_regex.search(cm)
+                                    if m_model2:
+                                        print('  -> model in script:', m_model2.group(1))
+                                    if m_js2:
+                                        print('  -> JS var in script:', m_js2.group(1))
+                                    if j_model2:
+                                        print('  -> JSON model in script:', j_model2.group(1))
+                                    if m_fw2:
+                                        print('  -> fw in script:', m_fw2.group(1))
+                                    if j_fw2:
+                                        print('  -> fw (json) in script:', j_fw2.group(1))
+                            except Exception as e:
+                                print('  -> failed to fetch script:', e)
+                            checked += 1
+
+                except Exception as e:
+                    print('Error processing', url, e)
+        print('\nDiagnostic probe finished')
+
     ctk.set_appearance_mode("dark")
     ctk.set_default_color_theme("blue")
-    parser = argparse.ArgumentParser(description="NETFUCK - Network scanner GUI")
+    parser = argparse.ArgumentParser(description="NetPulse - Network scanner GUI")
     parser.add_argument('--interface', '-i', help='Назва інтерфейсу для сканування (наприклад "Ethernet")')
     parser.add_argument('--disable-l2', action='store_true', help='Вимкнути ARP/Scapy L2 проби (корисно при віддалених запусках або Windows)')
     parser.add_argument('--no-virtual-filter', action='store_true', help='Не виключати віртуальні адаптери при авто-підборі')
+    parser.add_argument('--probe-host', help='Запустити headless діагностичну перевірку для IP (друк модель/прошивка)')
     args = parser.parse_args()
+
+    if args.probe_host:
+        diagnostic_probe_grandstream(args.probe_host)
+        import sys
+        sys.exit(0)
 
     root = ctk.CTk()
     app = NetworkScannerApp(root)
@@ -2255,3 +2590,4 @@ if __name__ == "__main__":
         if args.disable_l2:
             app.disable_l2 = True
     root.mainloop()
+    
