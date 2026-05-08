@@ -69,7 +69,7 @@ python "NETPULS.py" --interface "eth0" --disable-l2
 - Обмежити зовнішні API виклики (maclookup) конфіг-флагом або кешем/таймером.
 
 Автор та ліцензія
-- Файл скрипта: [NETPULS.py](NETFUCK by WhyDie.py)
+- Файл скрипта: [NETPULS.py](NETPULS.py)
 - README збережено як: [README.md](README.md)
 - Додайте файл LICENSE або вкажіть ліцензію за необхідності.
 
