@@ -783,9 +783,9 @@ class NetworkScannerApp:
         self.stop_btn.configure(state="disabled")
         self.update_action_buttons_state()
         if self.stop_event.is_set():
-            self.log("СКАНИРОВАННЯ ПЕРЕРВАНО ОПЕРАТОРОМ.", "error", from_thread=True)
+            self.log("СКАНУВАННЯ ПЕРЕРВАНО ОПЕРАТОРОМ.", "error", from_thread=True)
         else:
-            self.log("СКАНИРОВАННЯ УСПІШНО ЗАВЕРШЕНО!", "success", from_thread=True)
+            self.log("СКАНУВАННЯ УСПІШНО ЗАВЕРШЕНО!", "success", from_thread=True)
 
     def update_action_buttons_state(self, is_scanning=False):
         """Оновлює стан кнопок експорту."""
