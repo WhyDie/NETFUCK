@@ -1,8 +1,8 @@
-# NETFUCK — Мережевий сканер та аналізатор вразливостей
+# NETPULS — Мережевий сканер та аналізатор вразливостей
 
 Короткий опис
-- NETFUCK — графічний (CTk) інструмент для локального і віддаленого сканування підмереж, збору банерів, виявлення пристроїв і простого аналізу вразливостей.
-- Скрипт: [NETFUCK by WhyDie.py](NETFUCK by WhyDie.py)
+- NETPULS — графічний (CTk) інструмент для локального і віддаленого сканування підмереж, збору банерів, виявлення пристроїв і простого аналізу вразливостей.
+- Скрипт: [NETPULS.py](NETPULS.py)
 
 Ключові можливості
 - Автовизначення локальної підмережі (через `netifaces` або fallback `/24`).
@@ -30,13 +30,13 @@ pip install customtkinter netifaces scapy dnspython
 - GUI (за замовчуванням):
 
 ```bash
-python "NETFUCK by WhyDie.py"
+python "NETPULS.py"
 ```
 
 - З CLI опціями:
 
 ```bash
-python "NETFUCK by WhyDie.py" --interface "eth0" --disable-l2
+python "NETPULS.py" --interface "eth0" --disable-l2
 ```
 
 Параметри CLI
@@ -69,7 +69,7 @@ python "NETFUCK by WhyDie.py" --interface "eth0" --disable-l2
 - Обмежити зовнішні API виклики (maclookup) конфіг-флагом або кешем/таймером.
 
 Автор та ліцензія
-- Файл скрипта: [NETFUCK by WhyDie.py](NETFUCK by WhyDie.py)
+- Файл скрипта: [NETPULS.py](NETFUCK by WhyDie.py)
 - README збережено як: [README.md](README.md)
 - Додайте файл LICENSE або вкажіть ліцензію за необхідності.
 
